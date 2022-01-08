@@ -1,3 +1,4 @@
+/* eslint-disable import/extensions */
 import React, { useState } from "react";
 import {
   Grid,
@@ -12,10 +13,12 @@ import MDBox from "components/MDBox";
 import TagsInput from "react-tagsinput-special";
 import "react-tagsinput-special/react-tagsinput.css";
 import MDButton from "components/MDButton";
-import { collection, getDocs } from "firebase/firestore/lite";
-import db from "../../../config/fire";
+import database from "../../../firebase";
+
+import { newEventStyle } from "./style";
 
 const AddNewEvent = () => {
+  const classes = newEventStyle();
   // eslint-disable-next-line no-unused-vars
   const [categories, setCategories] = useState([]);
   const [state, setState] = useState({
@@ -45,100 +48,112 @@ const AddNewEvent = () => {
   const addNewEvent = async () => {
     const data = state;
     data.categories = categories;
-    console.log(data, "da");
-    const citiesCol = collection(db, "events");
-    const citySnapshot = await getDocs(citiesCol);
-    const cityList = citySnapshot.docs.map((doc) => doc.data());
-    console.log(cityList);
+    database.ref("events").push(data).catch(alert);
+    setState({
+      title: "",
+      description: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      image: "",
+      published: false,
+      paid: false,
+    });
+    setCategories([]);
   };
+  const fileSelectorHandler = () => {
+    // console.log(event);
+  };
+
   return (
     <MDBox pt={6} pb={3}>
-      <Card style={{ padding: 40 }}>
-        <Grid container spacing={6}>
+      <Card className={classes.card}>
+        <Grid container spacing={6} className={classes.gridMargin}>
           <Grid item xs={6}>
-            <div>
-              <InputLabel htmlFor="title">Title</InputLabel>
-              <TextField
-                required
-                variant="outlined"
-                name="title"
-                value={state.title}
-                size="small"
-                fullWidth
-                onChange={handleChange}
-              />
-            </div>
+            <InputLabel htmlFor="title">Title</InputLabel>
+            <TextField
+              required
+              variant="outlined"
+              name="title"
+              value={state.title}
+              size="small"
+              fullWidth
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={6}>
-            <div>
-              <InputLabel htmlFor="title">Location</InputLabel>
-              <TextField
-                required
-                variant="outlined"
-                name="location"
-                value={state.location}
-                size="small"
-                fullWidth
-                onChange={handleChange}
-              />
-            </div>
+            <InputLabel htmlFor="title">Location</InputLabel>
+            <TextField
+              required
+              variant="outlined"
+              name="location"
+              value={state.location}
+              size="small"
+              fullWidth
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={6}>
-            <div>
-              <InputLabel htmlFor="title">StartDate</InputLabel>
-              <TextField
-                id="date"
-                type="date"
-                name="startDate"
-                variant="outlined"
-                size="small"
-                fullWidth
-                value={state.startDate}
-                onChange={handleChange}
-              />
-            </div>
+            <InputLabel htmlFor="title">StartDate</InputLabel>
+            <TextField
+              id="date"
+              type="date"
+              name="startDate"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={state.startDate}
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={6}>
-            <div>
-              <InputLabel htmlFor="title">End Date</InputLabel>
-              <TextField
-                id="date"
-                type="date"
-                name="endDate"
-                variant="outlined"
-                size="small"
-                fullWidth
-                value={state.endDate}
-                onChange={handleChange}
-              />
-            </div>
+            <InputLabel htmlFor="title">End Date</InputLabel>
+            <TextField
+              id="date"
+              type="date"
+              name="endDate"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={state.endDate}
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={6}>
-            <div>
-              <Button variant="outlined" component="label">
-                Select Image
-                <input hidden accept="image/*" type="file" />
-              </Button>
-            </div>
+            <InputLabel htmlFor="title">Select Image</InputLabel>
+            <Button variant="outlined" fullWidth component="label">
+              <input onChange={fileSelectorHandler} type="file" />
+            </Button>
           </Grid>
           <Grid item xs={6}>
-            <div>
-              <TagsInput
-                onlyUnique
-                value={categories}
-                name="keywords"
-                inputProps={{
-                  placeholder: "Add Keyword",
-                  style: { width: "100px" },
-                }}
-                onChange={(e) => keywordsChange(e)}
-              />
-              <em style={{ fontSize: 15 }}>
-                Click on &apos;Enter&apos; button after adding each keyword and then save.
-              </em>
-            </div>
+            <TagsInput
+              onlyUnique
+              value={categories}
+              name="categories"
+              inputProps={{
+                placeholder: "Add Categories",
+                style: { width: "100px" },
+              }}
+              onChange={(e) => keywordsChange(e)}
+            />
+            <em className={classes.tagInputTxt}>
+              Click on &apos;Enter&apos; button after adding each keyword and then save.
+            </em>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={6} style={{ position: "relative" }}>
+            <InputLabel htmlFor="title">Description</InputLabel>
+            <TextField
+              fullWidth
+              name="description"
+              required
+              multiline
+              rows={6}
+              value={state.description}
+              variant="outlined"
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={6} className={classes.gridPosition}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -146,7 +161,6 @@ const AddNewEvent = () => {
                   checked={state.published}
                   name="published"
                   onChange={handleChange}
-                  style={{ color: "#CED4DA" }}
                 />
               }
               label="Published"
@@ -157,43 +171,16 @@ const AddNewEvent = () => {
                 <Checkbox
                   value={state.paid}
                   checked={state.paid}
-                  name="published"
+                  name="paid"
                   onChange={handleChange}
-                  style={{ color: "#CED4DA" }}
                 />
               }
               label="Paid"
             />
-          </Grid>
-          <Grid item xs={6}>
-            <div>
-              <InputLabel htmlFor="title">Description</InputLabel>
-              <TextField
-                fullWidth
-                name="description"
-                required
-                multiline
-                rows={6}
-                variant="outlined"
-              />
-            </div>
-          </Grid>
-          <Grid item xs={6} style={{ position: "relative" }}>
-            <div>
-              <MDButton
-                variant="outlined"
-                style={{
-                  position: "absolute",
-                  bottom: 25,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-                fullWidth
-                onClick={addNewEvent}
-              >
-                ADD NEW EVENT
-              </MDButton>
-            </div>
+            <br />
+            <MDButton className={classes.addButton} onClick={addNewEvent}>
+              ADD NEW EVENT
+            </MDButton>
           </Grid>
         </Grid>
       </Card>
